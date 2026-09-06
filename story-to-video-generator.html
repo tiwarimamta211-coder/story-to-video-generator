@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Story to Video Generator | IncomeAIHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cyan:#00fff0;
+    --cyan-dim:#0891a8;
+    --purple:#a855f7;
+    --green:#39ff14;
+    --bg-0:#060611;
+    --bg-1:#0d0d1c;
+    --bg-2:#12132a;
+    --panel:#12132a;
+    --border:#1f2340;
+    --text:#dfe6ff;
+    --text-dim:#8c93b8;
+    --danger:#ff3b6b;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg-0);
+    color:var(--text);
+    font-family:'Rajdhani',sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,255,240,0.025) 0px, rgba(0,255,240,0.025) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at 20% 10%, rgba(168,85,247,0.10), transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(0,255,240,0.08), transparent 45%);
+    pointer-events:none;
+    z-index:0;
+    animation:scan 9s linear infinite;
+  }
+  @keyframes scan{ 0%{background-position:0 0, 0 0, 0 0;} 100%{background-position:0 40px, 0 0, 0 0;} }
+
+  .wrap{position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:20px 16px 60px;}
+
+  header.site-head{ text-align:center; padding:28px 10px 20px; }
+  header.site-head h1{
+    font-family:'Orbitron',sans-serif;
+    font-weight:900;
+    font-size:clamp(1.5rem,4.5vw,2.6rem);
+    letter-spacing:1px;
+    background:linear-gradient(90deg,var(--cyan),var(--purple) 60%,var(--green));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 30px rgba(0,255,240,0.25);
+  }
+  header.site-head p{ color:var(--text-dim); font-size:0.95rem; margin-top:6px; letter-spacing:.5px;}
+  .badge-row{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px;}
+  .badge{
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem; letter-spacing:1px;
+    color:var(--cyan); border:1px solid var(--cyan-dim); padding:4px 10px; border-radius:20px;
+    background:rgba(0,255,240,0.05);
+  }
+
+  .panel{
+    background:linear-gradient(180deg, rgba(18,19,42,0.9), rgba(13,13,28,0.9));
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px;
+    margin-bottom:22px;
+    box-shadow:0 0 0 1px rgba(0,255,240,0.02), 0 10px 30px rgba(0,0,0,0.35);
+    position:relative;
+  }
+  .panel::before{
+    content:""; position:absolute; top:0; left:16px; right:16px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity:.5;
+  }
+  .panel h2{
+    font-family:'Orbitron',sans-serif; font-size:1.05rem; color:var(--cyan);
+    letter-spacing:1px; margin-bottom:16px; display:flex; align-items:center; gap:10px;
+  }
+  .panel h2 .num{
+    font-family:'Share Tech Mono',monospace; font-size:.8rem; color:var(--bg-0);
+    background:var(--cyan); width:26px; height:26px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+
+  label{ display:block; font-size:0.85rem; color:var(--text-dim); margin-bottom:6px; letter-spacing:.5px;}
+  textarea, select, input[type=text], input[type=number]{
+    width:100%; background:var(--bg-1); border:1px solid var(--border); color:var(--text);
+    font-family:'Rajdhani',sans-serif; font-size:1rem; padding:12px 14px; border-radius:8px;
+    outline:none; transition:.2s border-color, .2s box-shadow;
+  }
+  textarea:focus, select:focus, input:focus{
+    border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,255,240,0.12);
+  }
+  textarea{ resize:vertical; min-height:160px; line-height:1.5; }
+
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .field{ margin-bottom:14px; }
+  .row-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; }
+
+  button{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:0.95rem; letter-spacing:.5px;
+    cursor:pointer; border-radius:9px; padding:12px 20px; border:1px solid transparent;
+    transition:.15s transform, .15s box-shadow, .15s background;
+  }
+  button:active{ transform:translateY(1px); }
+  .btn-primary{
+    background:linear-gradient(90deg,var(--cyan),var(--purple));
+    color:#04040a; border:none;
+    box-shadow:0 0 20px rgba(0,255,240,0.25);
+  }
+  .btn-primary:hover{ box-shadow:0 0 30px rgba(0,255,240,0.45); }
+  .btn-ghost{
+    background:transparent; border:1px solid var(--border); color:var(--text);
+  }
+  .btn-ghost:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .btn-sm{ padding:8px 14px; font-size:0.82rem; }
+
+  .status-line{
+    display:flex; gap:18px; flex-wrap:wrap; margin-top:16px; font-family:'Share Tech Mono',monospace; font-size:0.8rem;
+  }
+  .status-line span{ color:var(--text-dim); }
+  .status-line b{ color:var(--green); }
+  .status-line.over b{ color:var(--danger); }
+
+  #storyboardSection{ display:none; }
+
+  .timeline{
+    display:flex; height:34px; border-radius:8px; overflow:hidden; border:1px solid var(--border); margin-bottom:20px;
+  }
+  .timeline .seg{
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:#04040a; font-weight:700;
+    border-right:1px solid rgba(0,0,0,0.4); min-width:2px; white-space:nowrap; overflow:hidden;
+  }
+
+  .scene-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+  .scene-card{
+    background:var(--bg-1); border:1px solid var(--border); border-radius:12px; padding:16px;
+    position:relative; overflow:hidden;
+  }
+  .scene-card::before{
+    content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--cyan);
+  }
+  .scene-card .scene-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .scene-card .scene-num{
+    font-family:'Orbitron',sans-serif; font-size:0.85rem; color:var(--purple); letter-spacing:1px;
+  }
+  .scene-card .scene-dur{
+    font-family:'Share Tech Mono',monospace; font-size:0.75rem; color:var(--green);
+    border:1px solid rgba(57,255,20,0.35); padding:2px 8px; border-radius:12px;
+  }
+  .scene-card h4{ font-size:0.75rem; color:var(--text-dim); letter-spacing:1px; margin:10px 0 4px; text-transform:uppercase;}
+  .scene-card p{ font-size:0.92rem; color:var(--text); }
+  .scene-card .tag-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
+  .tag{
+    font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--cyan);
+    background:rgba(0,255,240,0.07); border:1px solid var(--cyan-dim); padding:2px 7px; border-radius:5px;
+  }
+  .scene-card .prompt-box{
+    background:var(--bg-0); border:1px dashed var(--border); border-radius:8px; padding:8px 10px;
+    font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); margin-top:6px;
+  }
+  .scene-card .copy-mini{
+    margin-top:8px; font-size:0.7rem; color:var(--cyan); background:transparent; border:1px solid var(--cyan-dim);
+    padding:5px 10px; border-radius:6px;
+  }
+
+  .ad-slot{
+    border:1px dashed var(--border); border-radius:10px; padding:14px; text-align:center;
+    color:var(--text-dim); font-size:0.75rem; letter-spacing:1px; font-family:'Share Tech Mono',monospace;
+    margin:22px 0;
+  }
+
+  .hindi-guide{ border-left:3px solid var(--purple); padding-left:16px; }
+  .hindi-guide h3{ color:var(--purple); font-family:'Orbitron',sans-serif; font-size:0.95rem; margin-bottom:10px;}
+  .hindi-guide p{ color:var(--text); font-size:0.95rem; margin-bottom:10px; }
+  .hindi-guide ol{ padding-left:20px; color:var(--text); font-size:0.93rem; }
+  .hindi-guide li{ margin-bottom:6px; }
+
+  footer{ text-align:center; color:var(--text-dim); font-size:0.75rem; padding:20px 0; font-family:'Share Tech Mono',monospace;}
+
+  @media (max-width:720px){
+    .grid-2, .grid-3{ grid-template-columns:1fr; }
+    .panel{ padding:16px; }
+    header.site-head h1{ font-size:1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site-head">
+    <h1>🎬 STORY → VIDEO GENERATOR</h1>
+    <p>Turn any story or script into a scene-by-scene video storyboard, instantly.</p>
+    <div class="badge-row">
+      <span class="badge">FREE TOOL</span>
+      <span class="badge">NO SIGNUP</span>
+      <span class="badge">MADE FOR INDIAN CREATORS</span>
+    </div>
+  </header>
+
+  <div class="panel">
+    <h2><span class="num">1</span> Paste Your Story / Script</h2>
+    <div class="field">
+      <label for="storyInput">Story text (write in English or Hinglish — one idea per paragraph works best)</label>
+      <textarea id="storyInput" placeholder="Once upon a time, a young girl in a small village dreamed of building her own business...&#10;&#10;She worked every evening after school, saving small amounts of money from selling homemade snacks...&#10;&#10;Years later, her little stall grew into a shop that employed people from her whole village."></textarea>
+    </div>
+    <div class="grid-3">
+      <div class="field">
+        <label for="platformSelect">Target Platform</label>
+        <select id="platformSelect">
+          <option value="shorts" data-min="15" data-max="60">YouTube Shorts / Reels (15–60s)</option>
+          <option value="long" data-min="180" data-max="900">YouTube Long-form (3–15 min)</option>
+          <option value="explainer" data-min="60" data-max="180">Explainer Video (1–3 min)</option>
+          <option value="ad" data-min="15" data-max="30">Ad / Promo (15–30s)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="styleSelect">Visual Style</label>
+        <select id="styleSelect">
+          <option value="cyberpunk neon-lit, glowing highlights, futuristic">Cyberpunk / Neon</option>
+          <option value="cinematic realistic, natural lighting, film grain">Cinematic Realistic</option>
+          <option value="flat 2D anime illustration, vibrant colors">Anime / Illustration</option>
+          <option value="minimal clean vector art, soft pastel colors">Minimal Vector</option>
+          <option value="warm documentary style, handheld, candid">Documentary</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="voiceSelect">Voiceover Pace</label>
+        <select id="voiceSelect">
+          <option value="130">Slow / Emotional (130 wpm)</option>
+          <option value="150" selected>Normal (150 wpm)</option>
+          <option value="175">Energetic / Fast (175 wpm)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row-actions">
+      <button class="btn-primary" onclick="generateStoryboard()">⚡ Generate Storyboard</button>
+      <button class="btn-ghost" onclick="loadSample()">Load Sample Story</button>
+      <button class="btn-ghost" onclick="document.getElementById('storyInput').value=''">Clear</button>
+    </div>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <div class="panel" id="storyboardSection">
+    <h2><span class="num">2</span> Your Video Storyboard</h2>
+    <div class="timeline" id="timelineBar"></div>
+    <div class="row-actions" style="margin-top:0; margin-bottom:18px;">
+      <button class="btn-ghost btn-sm" onclick="copyFullScript()">📋 Copy Full Voiceover Script</button>
+      <button class="btn-ghost btn-sm" onclick="downloadTxt()">⬇ Download Storyboard (.txt)</button>
+      <button class="btn-ghost btn-sm" onclick="downloadJson()">⬇ Download Storyboard (.json)</button>
+      <button class="btn-ghost btn-sm" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="scene-grid" id="sceneGrid"></div>
+  </div>
+
+  <div class="ad-slot">ADVERTISEMENT — 728×90</div>
+
+  <div class="panel hindi-guide">
+    <h3>🇮🇳 इस टूल का उपयोग कैसे करें (How to Use in Hindi)</h3>
+    <p>यह टूल आपकी किसी भी कहानी या स्क्रिप्ट को अपने आप scene-by-scene वीडियो storyboard में बदल देता है — हर scene के लिए duration, voiceover लाइनें, कैमरा शॉट और AI image prompt तैयार हो जाता है।</p>
+    <ol>
+      <li>ऊपर बॉक्स में अपनी story या script paste करें (हर नया paragraph = नया scene)।</li>
+      <li>Platform चुनें — Shorts/Reels के लिए छोटी story, Long-form के लिए बड़ी।</li>
+      <li>Visual Style चुनें — यही style हर scene के AI image prompt में अपने आप जुड़ जाएगी।</li>
+      <li>"Generate Storyboard" दबाएं — आपको हर scene का duration, voiceover text और image prompt मिलेगा।</li>
+      <li>हर scene के "Copy Prompt" बटन से AI image prompt कॉपी करें और Midjourney, DALL·E या किसी भी AI image tool में paste करें।</li>
+      <li>Voiceover script को AI Voice Generator टूल में डालकर आवाज़ तैयार करें, फिर सभी scenes को अपने video editor में जोड़ें।</li>
+    </ol>
+    <p style="color:var(--text-dim); font-size:0.85rem; margin-top:10px;">💡 कमाई टिप: यह पूरा workflow (Story → Storyboard → AI Images → AI Voice → Video Edit) freelancers Upwork/Fiverr पर "faceless video creation service" के रूप में बेच सकते हैं।</p>
+  </div>
+
+  <footer>IncomeAIHub • Free AI Tools for Indian Creators & Freelancers</footer>
+</div>
+
+<script>
+const SAMPLE = `Once upon a time, a young girl in a small village dreamed of building her own business.
+
+Every evening after school, she sold homemade snacks door to door, saving every rupee she earned.
+
+Some days were hard. People laughed at her small stall and told her to give up.
+
+But she kept going, learning from every mistake and slowly improving her recipes.
+
+Years later, her little stall had grown into a shop that employed people from her whole village.
+
+Her story proves that small consistent steps can build something extraordinary.`;
+
+function loadSample(){
+  document.getElementById('storyInput').value = SAMPLE;
+}
+
+const STOPWORDS = new Set(['the','a','an','and','or','but','of','to','in','on','at','for','with','is','was','were','are','be','been','it','she','he','they','her','his','their','that','this','as','by','from','had','has','have','not','so','just','into','after','before','then','than','over','up','down','out','about','who','what','when','where','how','which','while','also','very','more','most','some','all','one','young','old']);
+
+const SHOT_TYPES = ['Wide Establishing Shot','Close-Up','Medium Shot','Slow Pan','Zoom In','Aerial / Drone View','Over-the-Shoulder','Tracking Shot','Low Angle Shot','Point of View (POV)'];
+const MOOD_KEYWORDS = {
+  'Upbeat / Hopeful': ['dream','hope','happy','success','grow','smile','celebrate','joy','win','proud','bright'],
+  'Tense / Suspenseful': ['fear','danger','dark','alone','lost','struggle','fight','risk','sudden','shock'],
+  'Emotional / Reflective': ['cry','miss','remember','love','lonely','sad','tears','heart','memory'],
+  'Epic / Motivational': ['fought','achieve','overcome','rise','power','strong','victory','journey','build','extraordinary'],
+  'Calm / Documentary': ['every','day','village','morning','walk','slow','simple','quiet']
+};
+
+let currentStoryboard = [];
+
+function splitIntoScenes(text){
+  let paragraphs = text.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  if(paragraphs.length < 2){
+    // fallback: split by sentences into groups of 2
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    paragraphs = [];
+    for(let i=0;i<sentences.length;i+=2){
+      paragraphs.push(sentences.slice(i,i+2).join(' ').trim());
+    }
+  }
+  return paragraphs.filter(p=>p.length>0);
+}
+
+function extractKeywords(text, count=5){
+  const words = text.toLowerCase().replace(/[^a-zA-Z\s]/g,'').split(/\s+/).filter(w=>w.length>3 && !STOPWORDS.has(w));
+  const freq = {};
+  words.forEach(w=> freq[w] = (freq[w]||0)+1 );
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,count).map(e=>e[0]);
+}
+
+function detectMood(text){
+  const lower = text.toLowerCase();
+  let bestMood = 'Calm / Documentary', bestScore = 0;
+  for(const [mood, words] of Object.entries(MOOD_KEYWORDS)){
+    let score = 0;
+    words.forEach(w=>{ if(lower.includes(w)) score++; });
+    if(score > bestScore){ bestScore = score; bestMood = mood; }
+  }
+  return bestMood;
+}
+
+function generateStoryboard(){
+  const text = document.getElementById('storyInput').value.trim();
+  const statusLine = document.getElementById('statusLine');
+  if(!text){
+    statusLine.innerHTML = '<span style="color:var(--danger)">⚠ Please paste a story first.</span>';
+    return;
+  }
+
+  const wpm = parseInt(document.getElementById('voiceSelect').value, 10);
+  const styleEl = document.getElementById('styleSelect');
+  const style = styleEl.value;
+  const platformEl = document.getElementById('platformSelect');
+  const minDur = parseInt(platformEl.selectedOptions[0].dataset.min,10);
+  const maxDur = parseInt(platformEl.selectedOptions[0].dataset.max,10);
+
+  const scenes = splitIntoScenes(text);
+  currentStoryboard = scenes.map((sceneText, i)=>{
+    const wordCount = sceneText.split(/\s+/).filter(Boolean).length;
+    const duration = Math.max(2, Math.round((wordCount / wpm) * 60));
+    const keywords = extractKeywords(sceneText, 5);
+    const shot = SHOT_TYPES[i % SHOT_TYPES.length];
+    const mood = detectMood(sceneText);
+    const imagePrompt = `${style}, depicting: ${keywords.join(', ') || 'story scene'} — ${shot.toLowerCase()}, high detail, 16:9`;
+    return {
+      sceneNumber: i+1,
+      voiceover: sceneText,
+      wordCount,
+      duration,
+      shot,
+      mood,
+      keywords,
+      imagePrompt
+    };
+  });
+
+  renderStoryboard(minDur, maxDur);
+}
+
+function renderStoryboard(minDur, maxDur){
+  const grid = document.getElementById('sceneGrid');
+  const timeline = document.getElementById('timelineBar');
+  const statusLine = document.getElementById('statusLine');
+  grid.innerHTML = '';
+  timeline.innerHTML = '';
+
+  const totalDuration = currentStoryboard.reduce((sum,s)=>sum+s.duration,0);
+  const palette = ['#00fff0','#a855f7','#39ff14','#ff9d3b','#ff3b6b'];
+
+  currentStoryboard.forEach((s,i)=>{
+    // timeline segment
+    const seg = document.createElement('div');
+    seg.className = 'seg';
+    seg.style.width = Math.max(2, (s.duration/totalDuration)*100) + '%';
+    seg.style.background = palette[i % palette.length];
+    seg.title = `Scene ${s.sceneNumber} — ${s.duration}s`;
+    seg.textContent = s.duration+'s';
+    timeline.appendChild(seg);
+
+    // scene card
+    const card = document.createElement('div');
+    card.className = 'scene-card';
+    card.innerHTML = `
+      <div class="scene-head">
+        <span class="scene-num">SCENE ${String(s.sceneNumber).padStart(2,'0')}</span>
+        <span class="scene-dur">${s.duration}s</span>
+      </div>
+      <h4>Voiceover</h4>
+      <p>${escapeHtml(s.voiceover)}</p>
+      <h4>Shot &amp; Mood</h4>
+      <div class="tag-row">
+        <span class="tag">${s.shot}</span>
+        <span class="tag">${s.mood}</span>
+        <span class="tag">${s.wordCount} words</span>
+      </div>
+      <h4>AI Image Prompt</h4>
+      <div class="prompt-box">${escapeHtml(s.imagePrompt)}</div>
+      <button class="copy-mini" onclick="copyText(this, ${JSON.stringify(s.imagePrompt)})">Copy Prompt</button>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('storyboardSection').style.display = 'block';
+
+  const mins = Math.floor(totalDuration/60), secs = totalDuration%60;
+  const isOver = totalDuration > maxDur;
+  const isUnder = totalDuration < minDur;
+  statusLine.className = 'status-line' + (isOver || isUnder ? ' over' : '');
+  statusLine.innerHTML = `
+    <span>Scenes: <b>${currentStoryboard.length}</b></span>
+    <span>Total Duration: <b>${mins}m ${secs}s (${totalDuration}s)</b></span>
+    <span>Target Range: <b>${minDur}s–${maxDur}s</b></span>
+    <span>${isOver ? '⚠ Story is longer than target — trim a paragraph.' : isUnder ? '⚠ Story is shorter than target — add more detail.' : '✔ Within target duration.'}</span>
+  `;
+
+  document.getElementById('storyboardSection').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function escapeHtml(str){
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function copyText(btn, text){
+  navigator.clipboard.writeText(text).then(()=>{
+    const original = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(()=> btn.textContent = original, 1500);
+  });
+}
+
+function copyFullScript(){
+  const script = currentStoryboard.map(s=>`Scene ${s.sceneNumber}: ${s.voiceover}`).join('\n\n');
+  navigator.clipboard.writeText(script).then(()=> alert('Full voiceover script copied to clipboard!'));
+}
+
+function downloadTxt(){
+  let out = `STORY TO VIDEO — STORYBOARD\nGenerated by IncomeAIHub\n${'='.repeat(40)}\n\n`;
+  currentStoryboard.forEach(s=>{
+    out += `SCENE ${s.sceneNumber} (${s.duration}s)\n`;
+    out += `Shot: ${s.shot}  |  Mood: ${s.mood}\n`;
+    out += `Voiceover: ${s.voiceover}\n`;
+    out += `Image Prompt: ${s.imagePrompt}\n`;
+    out += `${'-'.repeat(40)}\n\n`;
+  });
+  triggerDownload(out, 'storyboard.txt', 'text/plain');
+}
+
+function downloadJson(){
+  const out = JSON.stringify(currentStoryboard, null, 2);
+  triggerDownload(out, 'storyboard.json', 'application/json');
+}
+
+function triggerDownload(content, filename, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
